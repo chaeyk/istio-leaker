@@ -10,3 +10,4 @@ spec:
   containers:
     - name: istio-leaker
       image: chaeyk/istio-leaker
+      imagePullPolicy: Always
