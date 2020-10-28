@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: istio-leaker
+  labels:
+    app: istio-leaker
+  annotations:
+    sidecar.istio.io/inject: "true"
+spec:
+  containers:
+    - name: istio-leaker
+      image: chaeyk/istio-leaker
