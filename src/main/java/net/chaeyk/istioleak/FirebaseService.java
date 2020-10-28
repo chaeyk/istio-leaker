@@ -7,6 +7,7 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.TopicManagementResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -15,6 +16,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class FirebaseService implements InitializingBean {
         String appName = "istioLeaker";
 
 
-        var keyStream = new FileInputStream(keyfile);
+        InputStream keyStream = new FileInputStream(keyfile);
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(GoogleCredentials.fromStream(keyStream))
                 .setDatabaseUrl(fcmDatabaseUrl)
@@ -44,8 +46,15 @@ public class FirebaseService implements InitializingBean {
         FirebaseDatabase.getInstance(firebaseApp).setPersistenceEnabled(true);
     }
 
+    public boolean register(String token, String topic) throws FirebaseMessagingException {
+        TopicManagementResponse response = FirebaseMessaging.getInstance(firebaseApp)
+                .subscribeToTopic(ImmutableList.of(token), topic);
+        response.getErrors().forEach(error -> log.error("register failed: {}", error.getReason()));
+        return response.getErrors().isEmpty();
+    }
+
     public boolean unregister(String token, String topic) throws FirebaseMessagingException {
-        var response = FirebaseMessaging.getInstance(firebaseApp)
+        TopicManagementResponse response = FirebaseMessaging.getInstance(firebaseApp)
                 .unsubscribeFromTopic(ImmutableList.of(token), topic);
         response.getErrors().forEach(error -> log.error("unregister failed: {}", error.getReason()));
         return response.getErrors().isEmpty();
